@@ -8,7 +8,8 @@
     "url": "git://github.com/username/repository.git"
   },
   "scripts": {
-    "test": "continue"
+    "test": "continue",
+    "start": "node index.js"
   },
   "author": "",
   "license": "ISC",
