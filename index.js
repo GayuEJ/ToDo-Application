@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 // Updated todoStatus for a user
 
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/todoaDB');
+mongoose.connect('mongodb://localhost:27017/todoDB');
 
 var Schema = mongoose.Schema;
 
