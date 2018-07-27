@@ -1,6 +1,6 @@
 var express = require('express');
 var bodyParser = require('body-parser');
-var bcrypt = require('bcrypt');
+//var bcrypt = require('bcrypt');
 var app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); // Parses urlencoded bodies
@@ -49,7 +49,8 @@ console.log(req.body)
 
 console.log(userDetails);
 
-userDetails.password=bcrypt.hashSync(req.body.password, bcrypt.genSaltSync(8), null);
+//userDetails.password=bcrypt.hashSync(req.body.password, bcrypt.genSaltSync(8), null);
+userDetails.password=req.body.password;
 
     userDetails.save(function(err, todos) {
         console.log(err);
@@ -81,7 +82,9 @@ Todos.findOne({ user: userDetails.user }, function(err, todoRes) {
   console.log(todoRes.user);
   console.log(todoRes.password);
 
-  var isValid = bcrypt.compareSync(userDetails.password, todoRes.password);
+  //var isValid = bcrypt.compareSync(userDetails.password, todoRes.password);
+
+  var isValid = true;
 
     if(!isValid){
       res.statusCode = 400;
