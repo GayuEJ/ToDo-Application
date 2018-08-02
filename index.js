@@ -1,10 +1,13 @@
 var express = require('express');
 var bodyParser = require('body-parser');
+const cors = require('cors');
+
 //var bcrypt = require('bcrypt');
 var app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); // Parses urlencoded bodies
 app.use(bodyParser.json());
+app.use(cors());
 
 //register
 //signin
@@ -13,7 +16,7 @@ app.use(bodyParser.json());
 // Updated todoStatus for a user
 
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/sampledb',{ useMongoClient: true });
+mongoose.connect('mongodb://localhost:27017/sampledb');
 
 var Schema = mongoose.Schema;
 
@@ -56,7 +59,7 @@ userDetails.password=req.body.password;
         console.log(err);
         if (!err) {
             return res.json({
-                status: 'OK',
+
                 todos: todos
             });
         } else {
@@ -107,9 +110,9 @@ Todos.findOne({ user: userDetails.user }, function(err, todoRes) {
 app.get('/todos/:userName', function(req, res) {
 
       console.log(req.params.userName);
-    Todos.find({user:req.params.userName},{_id:1,user:1,todoList:1}, function(err, todos) {
+    Todos.find({user:req.params.userName},{_id:1,user:1,todoList:1}, function(err, todosRes) {
 
-        if (!todos) {
+        if (!todosRes) {
             res.statusCode = 404;
 
             return res.json({
@@ -118,10 +121,7 @@ app.get('/todos/:userName', function(req, res) {
         };
 
         if (!err) {
-            return res.json({
-                status: 'OK',
-                todos: todos
-            });
+            return res.status(200).json(todosRes[0]);
         } else {
             res.statusCode = 500;
             //  log.error('Internal error(%d): %s',res.statusCode,err.message);
@@ -165,23 +165,92 @@ app.get('/todos/:userName', function(req, res) {
 //     });
 // });
 
-app.post('/todo', function(req, res) {
+app.post('/todo/', function(req, res) {
 
-    var todos = new Todos({
-        user: req.body.user,
-        todoList: req.body.todoList
-    });
+    var todos = {
+        userName: req.body.user,
+        todoName: req.body.todoName,
+        todoStatus: false
+    };
 
 
 console.log(todos);
 
-  Todos.findOneAndUpdate({user: todos.user}, {$set: {todoList: todos.todoList}},function(err, todoRes) {
-      console.log(err);
-      if (!err) {
-          return res.json({
-              status: 'OK',
-              todo: todoRes
-          });
+Todos.findOne({user: todos.userName},function(err, todoRes) {
+
+    if(todoRes!=null){
+
+      var len = todoRes.todoList.length;
+      todoRes.todoList[len] =todos
+      var response = todoRes;
+      Todos.findOneAndUpdate({user: todos.userName}, {$set: {todoList: todoRes.todoList}},function(err, res1) {
+
+        console.log(res1)
+        if (err) {
+            res.statusCode = 500;
+            res.json({
+                error: 'Server error'
+            });
+        }
+      });
+
+        if (!err) {
+                  return res.status(200).json(response);
+            } else {
+                res.statusCode = 500;
+                res.json({
+                    error: 'Server error'
+                });
+            }
+}else{
+    return res.status(400).json("user Not found");
+}
+  });
+
+});
+
+app.put('/todo/', function(req, res) {
+
+console.log(todos);
+
+var todos = {
+    userName: req.body.user,
+    todoName: req.body.todoName,
+    todoStatus: req.body.todoStatus
+};
+
+
+console.log(todos);
+
+Todos.findOne({user: todos.userName},function(err, todoRes) {
+
+  var currentTodoList = todoRes.todoList;
+
+  var index =0;
+  currentTodoList.forEach(function(todo){
+
+      if(todo.todoName == todos.todoName){
+
+          currentTodoList[index]={
+            todoName: todos.todoName,
+            todoStatus: todos.todoStatus
+          }
+      }
+        index++;
+  });
+  console.log(currentTodoList);
+
+  Todos.findOneAndUpdate({user: todos.userName}, {$set: {todoList: currentTodoList}},function(err, todoRes) {
+    if(err){
+      res.statusCode = 500;
+      res.json({
+          error: 'Server error'
+      });
+    }
+  });
+
+  if (!err) {
+            return res.status(200).json(currentTodoList);
       } else {
           res.statusCode = 500;
           res.json({
@@ -193,29 +262,44 @@ console.log(todos);
 
 });
 
-app.put('/todo/', function(req, res) {
 
-  var todos = new Todos({
-      user: req.body.user,
-      todoList: req.body.todoList
+app.delete('/todo/:id/:user', function(req, res) {
+
+
+console.log(req.params.id);
+
+Todos.findOne({user: req.params.user},function(err, todoRes) {
+
+  var currentTodoList = todoRes.todoList;
+
+  var index =0;
+  currentTodoList.forEach(function(todo){
+
+      if(todo._id == req.params.id){
+        currentTodoList.splice(index, 1);
+        return;
+      }
+        index++;
+  });
+  console.log(currentTodoList);
+
+  Todos.findOneAndUpdate({user: req.params.user}, {$set: {todoList: currentTodoList}},function(err, todoRes) {
+    if(err){
+      res.statusCode = 500;
+      res.json({
+          error: 'Server error'
+      });
+    }
   });
 
-
-console.log(todos);
-
-Todos.findOneAndUpdate({user: todos.user}, {$set: {todoList: todos.todoList}},function(err, todoRes) {
-    console.log(err);
-    if (!err) {
-        return res.json({
-            status: 'OK',
-            todo: todoRes
-        });
-    } else {
-        res.statusCode = 500;
-        res.json({
-            error: 'Server error'
-        });
-    }
+  if (!err) {
+            return res.status(200).json(currentTodoList);
+      } else {
+          res.statusCode = 500;
+          res.json({
+              error: 'Server error'
+          });
+      }
 
 });
 
