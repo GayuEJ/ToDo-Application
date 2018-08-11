@@ -82,13 +82,21 @@ app.post('/signin', function(req, res) {
 console.log(userDetails);
 
 Todos.findOne({ user: userDetails.user }, function(err, todoRes) {
-  console.log(todoRes.user);
+  console.log(todoRes);
+  if(todoRes == null){
+    return res.json({
+        error: 'Credentials does not match'
+    });
+  }
   console.log(todoRes.password);
 
   //var isValid = bcrypt.compareSync(userDetails.password, todoRes.password);
 
-  var isValid = true;
+  var isValid = false;
 
+  if(todoRes.password === userDetails.password){
+    isValid= true;
+  }
     if(!isValid){
       res.statusCode = 400;
 
@@ -99,7 +107,7 @@ Todos.findOne({ user: userDetails.user }, function(err, todoRes) {
 
   return res.json({
       status: 'OK',
-      todoRes: todoRes
+      user: todoRes.user
   });
 
 });
@@ -110,7 +118,7 @@ Todos.findOne({ user: userDetails.user }, function(err, todoRes) {
 app.get('/todos/:userName', function(req, res) {
 
       console.log(req.params.userName);
-    Todos.find({user:req.params.userName},{_id:1,user:1,todoList:1}, function(err, todosRes) {
+    Todos.find({user:req.params.userName},{todoList:1}, function(err, todosRes) {
 
         if (!todosRes) {
             res.statusCode = 404;
@@ -121,7 +129,7 @@ app.get('/todos/:userName', function(req, res) {
         };
 
         if (!err) {
-            return res.status(200).json(todosRes[0]);
+            return res.status(200).json(todosRes[0].todoList);
         } else {
             res.statusCode = 500;
             //  log.error('Internal error(%d): %s',res.statusCode,err.message);
@@ -172,7 +180,6 @@ app.post('/todo/', function(req, res) {
         todoName: req.body.todoName,
         todoStatus: false
     };
-
 
 console.log(todos);
 
