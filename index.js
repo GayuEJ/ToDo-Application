@@ -16,7 +16,7 @@ app.use(cors());
 // Updated todoStatus for a user
 
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://127.0.0.1:27017/sampledb');
+mongoose.connect('mongodb://127.0.0.1:27017/sampledb', { useNewUrlParser: true });
 
 var Schema = mongoose.Schema;
 
