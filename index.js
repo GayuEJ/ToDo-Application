@@ -31,7 +31,15 @@ var todosSchema = new Schema({
         }
     }],
     user :{
-      type: String
+      type: String,
+      validate: {
+          validator: function(v, cb) {
+            User.find({name: v}, function(err,docs){
+               cb(docs.length == 0);
+            });
+          },
+          message: 'User already exists!'
+        }
     },
     password :{
       type: String
@@ -129,6 +137,7 @@ app.get('/todos/:userName', function(req, res) {
         };
 
         if (!err) {
+
             return res.status(200).json(todosRes[0].todoList);
         } else {
             res.statusCode = 500;
